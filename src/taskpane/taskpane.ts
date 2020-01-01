@@ -7,30 +7,51 @@
 
 Office.onReady(info => {
   if (info.host === Office.HostType.Excel) {
-    document.getElementById("sideload-msg").style.display = "none";
+    // document.getElementById("sideload-msg").style.display = "none";
     document.getElementById("app-body").style.display = "flex";
-    document.getElementById("run").onclick = run;
+    document.getElementById("run").onclick = getAutoTagDataRange;
   }
 });
 
-export async function run() {
-  try {
-    await Excel.run(async context => {
-      /**
-       * Insert your Excel code here
-       */
-      const range = context.workbook.getSelectedRange();
+async function getAutoTagDataRange() {
+  await Excel.run(async (context) => {
+    const sheets = context.workbook.worksheets;
+    sheets.load("items/name");
 
-      // Read the range address
-      range.load("address");
+    await context.sync()
+      .then(() => {
+        for (let sheet of sheets.items) {
+          if (sheet.name === "AutoTag") {
+            getAutoTagData(sheet.id);    
+          }
+        }
+      }).catch((reason) => {
+        console.log(reason);
+      })
+  });
+}
 
-      // Update the fill color
-      range.format.fill.color = "yellow";
+async function getAutoTagData(sheetId: string) {
+  await Excel.run(async (context) => {
+    const sheet = context.workbook.worksheets.getItem(sheetId).getUsedRange(true);
+    sheet.load();
 
-      await context.sync();
-      console.log(`The range address was ${range.address}.`);
-    });
-  } catch (error) {
-    console.error(error);
-  }
+    await context.sync()
+      .then(() => {
+        let autoTagData = []
+        let values = sheet.text;
+        let keys = values.shift();
+        for (let row of values) {
+          let autoTagRow = {}
+          for (let i = 0; i < keys.length; i++) {
+            autoTagRow[keys[i]] = row[i]
+          }
+          autoTagData.push(autoTagRow)
+        }
+        console.log(autoTagData);
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+  })
 }
