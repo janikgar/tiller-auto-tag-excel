@@ -3,7 +3,7 @@
  * See LICENSE in the project root for license information.
  */
 
-/* global console, document, Excel, Office */
+/* global console, document, Excel, Office, Map, Set */
 
 class Rule {
   category: string;
@@ -51,7 +51,6 @@ class Rule {
 }
 
 class Transaction {
-  // Date	Description	Category	Tags	Amount	Account	Account #	Institution	Month	Week	Full Description	Check Number	Transaction Id
   address?: number;
   date: Date;
   description: string;
@@ -89,10 +88,8 @@ class Transaction {
 
 Office.onReady(info => {
   if (info.host === Office.HostType.Excel) {
-    // document.getElementById("sideload-msg").style.display = "none";
     document.getElementById("app-body").style.display = "flex";
     document.getElementById("run").onclick = main;
-    // document.onload = main;
   }
 });
 
@@ -101,7 +98,6 @@ function makeRules(values: string[][]): Array<Rule> {
   values.shift(); // slide off the first row, which is column headers
   for (let row of values) {
     let outputRow = new Rule(row[0], row[1], row[2], row[3], row[4], row[5])
-      // outputRow[keys[i].replace("\n", "")] = row[i]
     outputData.push(outputRow)
   }
   return outputData
@@ -121,7 +117,7 @@ async function getAutoTagData() {
   return rules
 }
 
-async function getTransactions() {
+async function getTransactions(): Promise<Map<string, Transaction>> {
   let columnsMatched = ["Description", "Account", "Institution", "Amount", "Category", "Tags"];
   let txnShape: Object;
   await Excel.run(async context => {
@@ -137,7 +133,7 @@ async function getTransactions() {
       })
   })
 
-  let txnPaginator: Array<any> = [];
+  let txnPaginator: Map<string, Transaction> = new Map<string, Transaction>();
   let columnsToSearch: Object = {};
   await Excel.run(async context => {
     let sheet = context.workbook.worksheets.getItem("Transactions")
@@ -165,7 +161,7 @@ async function getTransactions() {
                 let row = sheet.text[j]
                 let rowAddress = i + j + 1 // i = current step position; j = current row within this round-trip; +1 because of the header row
                 let newRow = new Transaction(row, rowAddress);
-                txnPaginator.push(newRow);
+                txnPaginator.set(newRow.transactionId, newRow);
               }
             })
             .catch(err => {
@@ -177,8 +173,9 @@ async function getTransactions() {
   return txnPaginator
 }
 
-async function runRules(rules: Array<Rule>, transactions: Array<Transaction>, uncategorizedOnly: boolean = false) {
+async function runRules(rules: Array<Rule>, transactionObject: Map<string, Transaction>, uncategorizedOnly: boolean = false): Promise<Array<Transaction>> {
   let matches: Array<any> = [];
+  let transactions = Array.from(transactionObject.values());
   console.log(`Running with ${rules.length} rules and ${transactions.length} transactions`)
   console.log(`Only running uncategorized transactions?: ${uncategorizedOnly}`)
   for (let transaction of transactions) {
@@ -214,32 +211,52 @@ async function runRules(rules: Array<Rule>, transactions: Array<Transaction>, un
   return matches
 }
 
+async function rewriteTags(txns: Array<Transaction>) {
+  let tagList: Array<Array<string>> = [];
+  for (let txn of txns) {
+    let tagArray: string;
+    if (txn.tags.size > 0) {
+      tagArray = [...txn.tags].join(",")
+    }
+    tagList.push([tagArray]);
+  }
+  tagList.unshift(["Tags"]);
+  await Excel.run(async context => {
+    let sheet = context.workbook.worksheets.getItem("Transactions");
+    sheet.load();
+    await context.sync().then(async () => {
+      let rangeAreas = sheet.findAll("Tags", {completeMatch: true, matchCase: true}).areas;
+      rangeAreas.load();
+      await context.sync().then(async () => {
+        let column = rangeAreas.items[0].getEntireColumn();
+        column.load();
+        await context.sync().then(async () => {
+          column.values = tagList;
+          column.format.autofitColumns();
+        }).catch(err => { return err});
+      }).catch(err => { return err});
+    }).catch(err => { return err});
+  }).catch(err => { console.log(err)});
+}
+
 async function main() {
   let autoTagData: Array<Rule> = [];
-  let transactions: Array<any> = [];
-  let results: Array<any> = [];
+  let transactions: Map<string, Transaction> = new Map<string, Transaction>();
+  let results: Array<Transaction> = [];
   await getAutoTagData()
     .then(result => {
       autoTagData = result;
     })
-    .catch(err => {
-      console.log(err);
-    });
-  await getTransactions()
+    .catch(err => { console.log(err);});
+    await getTransactions()
     .then(result => {
       transactions = result;
     })
-    .catch(err => {
-      console.log(err);
-    });
-    // console.log(autoTagData);
-    // console.log(transactions);
-  await runRules(autoTagData, transactions)
+    .catch(err => { console.log(err);});
+    await runRules(autoTagData, transactions)
     .then(result => {
       results = result;
     })
-    .catch(err => {
-      console.log(err);
-    });
-  console.log(results);
+    .catch(err => { console.log(err);});
+  rewriteTags(results);
 }
