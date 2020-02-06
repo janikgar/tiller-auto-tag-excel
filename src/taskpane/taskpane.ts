@@ -221,6 +221,7 @@ async function rewriteTags(txns: Array<Transaction>) {
     tagList.push([tagArray]);
   }
   tagList.unshift(["Tags"]);
+  
   await Excel.run(async context => {
     let sheet = context.workbook.worksheets.getItem("Transactions");
     sheet.load();
