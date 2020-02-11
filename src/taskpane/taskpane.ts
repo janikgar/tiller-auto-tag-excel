@@ -165,7 +165,7 @@ async function getTransactions(): Promise<Map<string, Transaction>> {
               }
             })
             .catch(err => {
-              console.log(err)
+              console.log(err.toString())
             })
         }
       })
@@ -211,7 +211,7 @@ async function runRules(rules: Array<Rule>, transactionObject: Map<string, Trans
   return matches
 }
 
-async function rewriteTags(txns: Array<Transaction>) {
+function rewriteTags(txns: Array<Transaction>) {
   let tagList: Array<Array<string>> = [];
   for (let txn of txns) {
     let tagArray: string;
@@ -221,24 +221,59 @@ async function rewriteTags(txns: Array<Transaction>) {
     tagList.push([tagArray]);
   }
   tagList.unshift(["Tags"]);
-  
-  await Excel.run(async context => {
+
+  Excel.run(context => {
     let sheet = context.workbook.worksheets.getItem("Transactions");
     sheet.load();
-    await context.sync().then(async () => {
+    return(context.sync().then(() => {
       let rangeAreas = sheet.findAll("Tags", {completeMatch: true, matchCase: true}).areas;
       rangeAreas.load();
-      await context.sync().then(async () => {
-        let column = rangeAreas.items[0].getEntireColumn();
-        column.load();
-        await context.sync().then(async () => {
-          column.values = tagList;
-          column.format.autofitColumns();
-        }).catch(err => { return err});
-      }).catch(err => { return err});
-    }).catch(err => { return err});
-  }).catch(err => { console.log(err)});
+      return(context.sync().then(() => {
+        let tagColumn = rangeAreas.items[0].getEntireColumn();
+        tagColumn.load();
+        return(context.sync().then(() => {
+          let tagColumnRange = tagColumn.getResizedRange(tagList.length, 0);
+          tagColumnRange.load();
+          return(context.sync().then(() => {
+            console.log(tagColumnRange);
+            return context.sync().catch(err => {console.log(err.toString())})
+          }))
+          // tagColumnRange.values = tagList;
+          // tagColumnRange.format.autofitColumns();
+        })).catch(err => { console.log(err.toString()) })
+      })).catch(err => {console.log(err.toString()) })
+    }).catch(err => { console.log(err.toString()) }))
+  });
 }
+
+// async function rewriteTags(txns: Array<Transaction>) {
+//   let tagList: Array<Array<string>> = [];
+//   for (let txn of txns) {
+//     let tagArray: string;
+//     if (txn.tags.size > 0) {
+//       tagArray = [...txn.tags].join(",")
+//     }
+//     tagList.push([tagArray]);
+//   }
+//   tagList.unshift(["Tags"]);
+  
+//   await Excel.run(async context => {
+//     let sheet = context.workbook.worksheets.getItem("Transactions");
+//     sheet.load();
+//     await context.sync().then(async () => {
+//       let rangeAreas = sheet.findAll("Tags", {completeMatch: true, matchCase: true}).areas;
+//       rangeAreas.load();
+//       await context.sync().then(async () => {
+//         let column = rangeAreas.items[0].getEntireColumn();
+//         column.load();
+//         await context.sync().then(async () => {
+//           column.values = tagList;
+//           column.format.autofitColumns();
+//         }).catch(err => { return err});
+//       }).catch(err => { return err});
+//     }).catch(err => { return err});
+//   }).catch(err => { console.log(err.toString())});
+// }
 
 async function main() {
   let autoTagData: Array<Rule> = [];
@@ -248,16 +283,16 @@ async function main() {
     .then(result => {
       autoTagData = result;
     })
-    .catch(err => { console.log(err);});
+    .catch(err => { console.log(err.toString());});
     await getTransactions()
     .then(result => {
       transactions = result;
     })
-    .catch(err => { console.log(err);});
+    .catch(err => { console.log(err.toString());});
     await runRules(autoTagData, transactions)
     .then(result => {
       results = result;
     })
-    .catch(err => { console.log(err);});
+    .catch(err => { console.log(err.toString());});
   rewriteTags(results);
 }
