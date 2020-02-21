@@ -224,25 +224,31 @@ function rewriteTags(txns: Array<Transaction>) {
 
   Excel.run(context => {
     let sheet = context.workbook.worksheets.getItem("Transactions");
-    sheet.load();
-    return(context.sync().then(() => {
-      let rangeAreas = sheet.findAll("Tags", {completeMatch: true, matchCase: true}).areas;
-      rangeAreas.load();
-      return(context.sync().then(() => {
-        let tagColumn = rangeAreas.items[0].getEntireColumn();
-        tagColumn.load();
-        return(context.sync().then(() => {
-          let tagColumnRange = tagColumn.getResizedRange(tagList.length, 0);
-          tagColumnRange.load();
-          return(context.sync().then(() => {
-            console.log(tagColumnRange);
-            return context.sync().catch(err => {console.log(err.toString())})
-          }))
-          // tagColumnRange.values = tagList;
-          // tagColumnRange.format.autofitColumns();
-        })).catch(err => { console.log(err.toString()) })
-      })).catch(err => {console.log(err.toString()) })
-    }).catch(err => { console.log(err.toString()) }))
+    let searchRange = sheet.getRange();
+    let tagColumnRange = searchRange.find("Tags", {
+      completeMatch: true,
+      matchCase: true,
+      searchDirection: Excel.SearchDirection.forward
+    })
+    tagColumnRange.load("columnIndex");
+    context.trackedObjects.add(tagColumnRange);
+    context.sync().then(() => {
+      let tagColumn = String.fromCharCode(tagColumnRange.columnIndex + 65);
+      let usedRange = sheet.getUsedRange(true);
+      let lastRow = usedRange.getLastRow();
+      lastRow.load("rowIndex");
+      context.trackedObjects.add(lastRow);
+      context.sync().then(() => {
+        let lastRowIndex = lastRow.rowIndex;
+        let columnRange = sheet.getRange(`${tagColumn}${lastRowIndex}`)
+        columnRange.load("values");
+        context.trackedObjects.add(columnRange);
+        context.sync().then(() => {
+          columnRange.values = tagList;
+        }).catch(err => {console.log(err)});
+      }).catch(err => { console.log(err) });
+    }).catch(err => {console.log(err)});
+    return(context.sync().catch(err => {console.log(err)}))
   });
 }
 
