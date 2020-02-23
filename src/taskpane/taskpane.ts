@@ -3,7 +3,7 @@
  * See LICENSE in the project root for license information.
  */
 
-/* global console, document, Excel, Office, Map, Set */
+/* global document, Excel, Office, Map, Set */
 
 class Rule {
   category: string;
@@ -93,6 +93,13 @@ Office.onReady(info => {
   }
 });
 
+function logLocal(logString: string) {
+  let par = document.getElementById("result-text");
+  let textNode: HTMLParagraphElement = document.createElement("p");
+  textNode.innerHTML = logString;
+  par.appendChild(textNode);
+}
+
 function makeRules(values: string[][]): Array<Rule> {
   let outputData: Array<Rule> = [];
   values.shift(); // slide off the first row, which is column headers
@@ -165,7 +172,7 @@ async function getTransactions(): Promise<Map<string, Transaction>> {
               }
             })
             .catch(err => {
-              console.log(err.toString())
+              logLocal(err.toString())
             })
         }
       })
@@ -176,8 +183,8 @@ async function getTransactions(): Promise<Map<string, Transaction>> {
 async function runRules(rules: Array<Rule>, transactionObject: Map<string, Transaction>, uncategorizedOnly: boolean = false): Promise<Array<Transaction>> {
   let matches: Array<any> = [];
   let transactions = Array.from(transactionObject.values());
-  console.log(`Running with ${rules.length} rules and ${transactions.length} transactions`)
-  console.log(`Only running uncategorized transactions?: ${uncategorizedOnly}`)
+  logLocal(`Running with ${rules.length} rules and ${transactions.length} transactions`)
+  logLocal(`Only running uncategorized transactions?: ${uncategorizedOnly}`)
   for (let transaction of transactions) {
     for (let rule of rules) {
       let ruleMatch = (
@@ -211,8 +218,8 @@ async function runRules(rules: Array<Rule>, transactionObject: Map<string, Trans
   return matches
 }
 
-function getTagColumns(): Promise<any> {
-  let returnPromise = Excel.run(async context => {
+async function getTagColumns(): Promise<any> {
+  let returnPromise = await Excel.run(async context => {
     let sheet = context.workbook.worksheets.getItem("Transactions");
     let searchRange = sheet.getRange();
     let tagSearch = searchRange.findOrNullObject("Tags", {
@@ -231,8 +238,8 @@ function getTagColumns(): Promise<any> {
   return returnPromise
 }
 
-function getTagLastRow(): Promise<any> {
-  let returnPromise = Excel.run(async context => {
+async function getTagLastRow(): Promise<any> {
+  let returnPromise = await Excel.run(async context => {
     let sheet = context.workbook.worksheets.getItem("Transactions");
     let usedRange = sheet.getUsedRange(true);
     let usedRangeRow = usedRange.getLastRow();
@@ -257,9 +264,8 @@ function scrapeTags(txns: Array<Transaction>): string[][] {
   return tagList
 }
 
-function rewriteTags(address: string, column: string[][]) {
-  console.log(address);
-  Excel.run(async context => {
+async function rewriteTags(address: string, column: string[][]) {
+  await Excel.run(async context => {
     let sheet = context.workbook.worksheets.getItem("Transactions");
     let rewriteRange = sheet.getRange(address);
     rewriteRange.values = column;
@@ -295,5 +301,5 @@ async function main() {
     .then(tagResult => {
       rewriteTags(rewriteAddress, tagResult);
     })
-    .catch(err => { console.log(err.toString());});
+    .catch(err => { logLocal(err.toString());});
 }
