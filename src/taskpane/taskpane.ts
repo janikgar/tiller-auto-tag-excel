@@ -204,14 +204,48 @@ async function runRules(rules: Array<Rule>, transactionObject: Map<string, Trans
         for (let tag of rule.tag) {
           transaction.tags.add(tag);
         }
-        matches.push(transaction);
       }
     }
+    matches.push(transaction);
   }
   return matches
 }
 
-function rewriteTags(txns: Array<Transaction>) {
+function getTagColumns(): Promise<any> {
+  let returnPromise = Excel.run(async context => {
+    let sheet = context.workbook.worksheets.getItem("Transactions");
+    let searchRange = sheet.getRange();
+    let tagSearch = searchRange.findOrNullObject("Tags", {
+      completeMatch: true,
+      matchCase: true,
+    })
+    tagSearch.load("columnindex");
+    return context.sync().then(() => {
+      if (tagSearch === null) {
+        return
+      }
+      let tagColumn = String.fromCharCode(tagSearch.columnIndex + 65);
+      return tagColumn
+    })
+  })
+  return returnPromise
+}
+
+function getTagLastRow(): Promise<any> {
+  let returnPromise = Excel.run(async context => {
+    let sheet = context.workbook.worksheets.getItem("Transactions");
+    let usedRange = sheet.getUsedRange(true);
+    let usedRangeRow = usedRange.getLastRow();
+    usedRangeRow.load("rowIndex");
+    return context.sync()
+      .then(() => {
+        return usedRangeRow.rowIndex;
+      })
+  })
+  return returnPromise
+}
+
+function scrapeTags(txns: Array<Transaction>): string[][] {
   let tagList: Array<Array<string>> = [];
   for (let txn of txns) {
     let tagArray: string;
@@ -221,84 +255,53 @@ function rewriteTags(txns: Array<Transaction>) {
     tagList.push([tagArray]);
   }
   tagList.unshift(["Tags"]);
-
-  Excel.run(context => {
-    let sheet = context.workbook.worksheets.getItem("Transactions");
-    let searchRange = sheet.getRange();
-    let tagColumnRange = searchRange.find("Tags", {
-      completeMatch: true,
-      matchCase: true,
-      searchDirection: Excel.SearchDirection.forward
-    })
-    tagColumnRange.load("columnIndex");
-    context.trackedObjects.add(tagColumnRange);
-    context.sync().then(() => {
-      let tagColumn = String.fromCharCode(tagColumnRange.columnIndex + 65);
-      let usedRange = sheet.getUsedRange(true);
-      let lastRow = usedRange.getLastRow();
-      lastRow.load("rowIndex");
-      context.trackedObjects.add(lastRow);
-      context.sync().then(() => {
-        let lastRowIndex = lastRow.rowIndex;
-        let columnRange = sheet.getRange(`${tagColumn}${lastRowIndex}`)
-        columnRange.load("values");
-        context.trackedObjects.add(columnRange);
-        context.sync().then(() => {
-          columnRange.values = tagList;
-        }).catch(err => {console.log(err)});
-      }).catch(err => { console.log(err) });
-    }).catch(err => {console.log(err)});
-    return(context.sync().catch(err => {console.log(err)}))
-  });
+  return tagList
 }
-
-// async function rewriteTags(txns: Array<Transaction>) {
-//   let tagList: Array<Array<string>> = [];
-//   for (let txn of txns) {
-//     let tagArray: string;
-//     if (txn.tags.size > 0) {
-//       tagArray = [...txn.tags].join(",")
-//     }
-//     tagList.push([tagArray]);
-//   }
-//   tagList.unshift(["Tags"]);
-  
-//   await Excel.run(async context => {
-//     let sheet = context.workbook.worksheets.getItem("Transactions");
-//     sheet.load();
-//     await context.sync().then(async () => {
-//       let rangeAreas = sheet.findAll("Tags", {completeMatch: true, matchCase: true}).areas;
-//       rangeAreas.load();
-//       await context.sync().then(async () => {
-//         let column = rangeAreas.items[0].getEntireColumn();
-//         column.load();
-//         await context.sync().then(async () => {
-//           column.values = tagList;
-//           column.format.autofitColumns();
-//         }).catch(err => { return err});
-//       }).catch(err => { return err});
-//     }).catch(err => { return err});
-//   }).catch(err => { console.log(err.toString())});
-// }
 
 async function main() {
   let autoTagData: Array<Rule> = [];
   let transactions: Map<string, Transaction> = new Map<string, Transaction>();
   let results: Array<Transaction> = [];
-  await getAutoTagData()
+  let tagColumn: number;
+  let tagLastRow: number;
+  await getTagColumns()
+    .then(columnResult => {
+      tagColumn = columnResult
+      return getTagLastRow()
+    })
+    .then(rowResult => {
+      tagLastRow = rowResult;
+      return getAutoTagData()
+    })
     .then(result => {
       autoTagData = result;
+      return getTransactions()
+    })
+    .then(txnResult => {
+      // console.log(`${tagColumn}1:${tagColumn}${tagLastRow}`)
+      return runRules(autoTagData, txnResult, false);
+    })
+    .then(ruleResult => {
+      return scrapeTags(ruleResult);
+    })
+    .then(tagResult => {
+      console.log(tagResult);
     })
     .catch(err => { console.log(err.toString());});
-    await getTransactions()
-    .then(result => {
-      transactions = result;
-    })
-    .catch(err => { console.log(err.toString());});
-    await runRules(autoTagData, transactions)
-    .then(result => {
-      results = result;
-    })
-    .catch(err => { console.log(err.toString());});
-  rewriteTags(results);
+  // await getTagColumns()
+  //   .then(result => {
+  //     tagColumn = result;
+  //   })
+  //   .catch(err => { console.log(err.toString());});
+  // await getTagLastRow()
+  //   .then(result => {
+  //     tagLastRow = result;
+  //     console.log(`tagRange: ${tagColumn}1:${tagColumn}${tagLastRow}`)
+  //   })
+    // await runRules(autoTagData, transactions)
+    // .then(result => {
+    //   results = result;
+    // })
+    // .catch(err => { console.log(err.toString());});
+  // rewriteTags(results);
 }
