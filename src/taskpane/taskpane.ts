@@ -239,7 +239,7 @@ function getTagLastRow(): Promise<any> {
     usedRangeRow.load("rowIndex");
     return context.sync()
       .then(() => {
-        return usedRangeRow.rowIndex;
+        return usedRangeRow.rowIndex + 1;
       })
   })
   return returnPromise
@@ -254,14 +254,22 @@ function scrapeTags(txns: Array<Transaction>): string[][] {
     }
     tagList.push([tagArray]);
   }
-  tagList.unshift(["Tags"]);
   return tagList
+}
+
+function rewriteTags(address: string, column: string[][]) {
+  console.log(address);
+  Excel.run(async context => {
+    let sheet = context.workbook.worksheets.getItem("Transactions");
+    let rewriteRange = sheet.getRange(address);
+    rewriteRange.values = column;
+    return context.sync()
+  })
 }
 
 async function main() {
   let autoTagData: Array<Rule> = [];
-  let transactions: Map<string, Transaction> = new Map<string, Transaction>();
-  let results: Array<Transaction> = [];
+  let rewriteAddress: string;
   let tagColumn: number;
   let tagLastRow: number;
   await getTagColumns()
@@ -278,30 +286,14 @@ async function main() {
       return getTransactions()
     })
     .then(txnResult => {
-      // console.log(`${tagColumn}1:${tagColumn}${tagLastRow}`)
+      rewriteAddress = `Transactions!${tagColumn}2:${tagColumn}${tagLastRow}`
       return runRules(autoTagData, txnResult, false);
     })
     .then(ruleResult => {
       return scrapeTags(ruleResult);
     })
     .then(tagResult => {
-      console.log(tagResult);
+      rewriteTags(rewriteAddress, tagResult);
     })
     .catch(err => { console.log(err.toString());});
-  // await getTagColumns()
-  //   .then(result => {
-  //     tagColumn = result;
-  //   })
-  //   .catch(err => { console.log(err.toString());});
-  // await getTagLastRow()
-  //   .then(result => {
-  //     tagLastRow = result;
-  //     console.log(`tagRange: ${tagColumn}1:${tagColumn}${tagLastRow}`)
-  //   })
-    // await runRules(autoTagData, transactions)
-    // .then(result => {
-    //   results = result;
-    // })
-    // .catch(err => { console.log(err.toString());});
-  // rewriteTags(results);
 }
