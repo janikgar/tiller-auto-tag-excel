@@ -2,15 +2,15 @@
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="TaskPaneApp">
   <Id>8563668c-f200-4bcb-be6b-29076fa52639</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>Contoso</ProviderName>
+  <ProviderName>J Nick Enterprises</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="AutoTag for Tiller"/>
-  <Description DefaultValue="A template to get started."/>
+  <Description DefaultValue="Automatic Tagging (similar to Tiller's AutoCat)"/>
   <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-80.png"/>
-  <SupportUrl DefaultValue="https://www.contoso.com/help"/>
+  <SupportUrl DefaultValue="https://sites.google.com/view/jnick/home"/>
   <AppDomains>
-    <AppDomain>contoso.com</AppDomain>
+    <AppDomain>https://sites.google.com/view/jnick/home</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Workbook"/>
@@ -24,9 +24,9 @@
       <Host xsi:type="Workbook">
         <DesktopFormFactor>
           <GetStarted>
-            <Title resid="GetStarted.Title"/>
-            <Description resid="GetStarted.Description"/>
-            <LearnMoreUrl resid="GetStarted.LearnMoreUrl"/>
+            <Title resid="AutoTag.Title"/>
+            <Description resid="AutoTag.Description"/>
+            <LearnMoreUrl resid="AutoTag.LearnMoreUrl"/>
           </GetStarted>
           <FunctionFile resid="Commands.Url"/>
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
@@ -67,18 +67,18 @@
         <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812"/>
+        <bt:Url id="AutoTag.LearnMoreUrl" DefaultValue="https://sites.google.com/view/jnick/home"/>
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GetStarted.Title" DefaultValue="Get started with your sample add-in!"/>
-        <bt:String id="CommandsGroup.Label" DefaultValue="Commands Group"/>
-        <bt:String id="TaskpaneButton.Label" DefaultValue="Show Taskpane"/>
+        <bt:String id="GetStarted.Title" DefaultValue="Begin tagging here"/>
+        <bt:String id="CommandsGroup.Label" DefaultValue="AutoTag"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="AutoTag"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="GetStarted.Description" DefaultValue="Your sample add-in loaded succesfully. Go to the HOME tab and click the 'Show Taskpane' button to get started."/>
-        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Click to Show a Taskpane"/>
+        <bt:String id="AutoTag.Description" DefaultValue="Add-in loaded succesfully. Go to the HOME tab and click the 'AutoTag' button to get started."/>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Click to Show AutoTag pane"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
