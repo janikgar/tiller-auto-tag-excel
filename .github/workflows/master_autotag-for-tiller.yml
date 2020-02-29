@@ -6,7 +6,7 @@ name: Build and deploy Node.js app to Azure Web App - autotag-for-tiller
 on:
   push:
     branches:
-      - master
+      - foobar
 
 jobs:
   build-and-deploy:
