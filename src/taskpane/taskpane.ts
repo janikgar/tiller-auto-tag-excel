@@ -89,7 +89,7 @@ class Transaction {
 Office.onReady(info => {
   if (info.host === Office.HostType.Excel) {
     document.getElementById("app-body").style.display = "flex";
-    document.getElementById("run").onclick = main;
+    document.getElementById("runAutoTag").onclick = main;
   }
 });
 
