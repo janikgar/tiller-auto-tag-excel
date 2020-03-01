@@ -14,28 +14,36 @@
     <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
 
     <!-- For more information on Office UI Fabric, visit https://developer.microsoft.com/fabric. -->
-    <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/9.6.1/css/fabric.min.css"/>
+    <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css"/>
 
     <!-- Template styles -->
     <!-- <link href="taskpane.css" rel="stylesheet" type="text/css" /> -->
 </head>
 
-<body class="ms-font-m ms-welcome ms-Fabric">
-    <!-- <header class="ms-welcome__header ms-bgColor-neutralLighter">
-        <img width="90" height="90" src="../../assets/logo-filled.png" alt="Contoso" title="Contoso" />
-        <h1 class="ms-font-su">Welcome</h1>
-    </header> -->
+<body class="ms-font-m ms-Fabric">
+    <header class="ms-bgColor-neutralLighter">
+        <img width="50" height="50" src="../../assets/logo-filled.png" alt="AutoTag for Tiller" title="AutoTag for Tiller" />
+        <span class="ms-fontSize-20">AutoTag <small>for Tiller</small></span>
+    </header>
     <main id="app-body" class="ms-welcome__main">
         <div class="ms-Grid" dir="ltr">
             <div class="ms-Grid-row">
-                <div class="ms-Grid-col ms-sm12">
-                    <button id="runAutoTag" class="ms-Button">
-                        <span class="ms-Button--label">Run AutoTag</span>
+                <!-- <div class="ms-Grid-col ms-sm2">
+
+                </div> -->
+                <div class="ms-Grid-col ms-sm8 ms-md8">
+                    <button id="runAutoTag" class="ms-Button ms-Button--default" style="width: 100%;">
+                        <span class="ms-Button-label">AutoTag</span>
+                    </button>
+                    <br />
+                    <button id="runCat" class="ms-Button" style="width:100%;">
+                        <span class="ms-Button-label">Categorize</span>
                     </button>
                 </div>
-            </div>
-            <div id="result-text" class="ms-Grid-row ms-sm12">
-                <div id="result-text" class="ms-Grid-col ms-sm12 ms-depth-16" style="min-width: 100%; min-height: 100px;"></div>
+                <div class="ms-Grid-col ms-sm8 ms-md8">
+                
+                </div>
+            <div id="result-text" class="ms-Grid-col ms-sm12 ms-depth-16" style="min-width: 100%; min-height: 100px;">
             </div>
         </div>
     </main>
