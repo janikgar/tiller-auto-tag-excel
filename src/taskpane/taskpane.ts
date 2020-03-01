@@ -90,10 +90,11 @@ Office.onReady(info => {
   if (info.host === Office.HostType.Excel) {
     document.getElementById("app-body").style.display = "flex";
     document.getElementById("runAutoTag").onclick = main;
+    document.getElementById("runCat").onclick = runCat;
   }
 });
 
-function logLocal(logString: string) {
+function logLocal(logString: any) {
   let par = document.getElementById("result-text");
   let textNode: HTMLParagraphElement = document.createElement("p");
   textNode.innerHTML = logString;
@@ -238,6 +239,26 @@ async function getTagColumns(): Promise<any> {
   return returnPromise
 }
 
+async function getCatColumns(): Promise<any> {
+  let returnPromise = await Excel.run(async context => {
+    let sheet = context.workbook.worksheets.getItem("Transactions");
+    let searchRange = sheet.getRange();
+    let catSearch = searchRange.findOrNullObject("Category", {
+      completeMatch: true,
+      matchCase: true,
+    })
+    catSearch.load("columnindex");
+    return context.sync().then(() => {
+      if (catSearch === null) {
+        return
+      }
+      let catColumn = String.fromCharCode(catSearch.columnIndex + 65);
+      return catColumn
+    })
+  })
+  return returnPromise
+}
+
 async function getTagLastRow(): Promise<any> {
   let returnPromise = await Excel.run(async context => {
     let sheet = context.workbook.worksheets.getItem("Transactions");
@@ -264,13 +285,51 @@ function scrapeTags(txns: Array<Transaction>): string[][] {
   return tagList
 }
 
-async function rewriteTags(address: string, column: string[][]) {
+function scrapeCats(txns: Array<Transaction>): string[][] {
+  let catList: Array<Array<string>> = [];
+  for (let txn of txns) {
+    catList.push([txn.category]);
+  }
+  return catList
+}
+
+async function rewriteCells(address: string, column: string[][]) {
   await Excel.run(async context => {
     let sheet = context.workbook.worksheets.getItem("Transactions");
     let rewriteRange = sheet.getRange(address);
     rewriteRange.values = column;
     return context.sync()
   })
+}
+
+async function runCat() {
+  let categoryData: Array<Rule> = [];
+  let rewriteAddress: string;
+  let catColumn: number;
+  let catLastRow: number;
+  await getCatColumns()
+    .then(columnResult => {
+      catColumn = columnResult;
+      return getTagLastRow()
+    })
+    .then(rowResult => {
+      catLastRow = rowResult;
+      return getAutoTagData()
+    })
+    .then(result => {
+      categoryData = result;
+      return getTransactions()
+    })
+    .then(txnResult => {
+      rewriteAddress = `Transactions!${catColumn}2:${catColumn}${catLastRow}`
+      return runRules(categoryData, txnResult, false);
+    })
+    .then(ruleResult => {
+      return scrapeCats(ruleResult);
+    })
+    .then(catResult => {
+      return rewriteCells(rewriteAddress, catResult);
+    }).catch(err => {logLocal(err);})
 }
 
 async function main() {
@@ -299,7 +358,7 @@ async function main() {
       return scrapeTags(ruleResult);
     })
     .then(tagResult => {
-      rewriteTags(rewriteAddress, tagResult);
+      rewriteCells(rewriteAddress, tagResult);
     })
-    .catch(err => { logLocal(err.toString());});
+    .catch(err => { logLocal(err);});
 }
