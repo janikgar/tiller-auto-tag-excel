@@ -69,7 +69,8 @@
       </bt:Images>
       <bt:Urls>
         <bt:Url id="AutoTag.LearnMoreUrl" DefaultValue="https://sites.google.com/view/jnick/home"/>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://d8k9625rqli4f.cloudfront.net/taskpane.html"/>
+        <!-- <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/> -->
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GetStarted.Title" DefaultValue="Begin tagging here"/>

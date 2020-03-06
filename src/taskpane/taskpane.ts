@@ -89,8 +89,9 @@ class Transaction {
 Office.onReady(info => {
   if (info.host === Office.HostType.Excel) {
     document.getElementById("app-body").style.display = "flex";
-    document.getElementById("runAutoTag").onclick = main;
+    document.getElementById("runAutoTag").onclick = runTag;
     document.getElementById("runCat").onclick = runCat;
+    document.getElementById("clearLog").onclick = clearLog;
   }
 });
 
@@ -302,11 +303,17 @@ async function rewriteCells(address: string, column: string[][]) {
   })
 }
 
+function clearLog() {
+  let logElement = document.getElementById("result-text");
+  logElement.innerHTML = "";
+}
+
 async function runCat() {
   let categoryData: Array<Rule> = [];
   let rewriteAddress: string;
   let catColumn: number;
   let catLastRow: number;
+  clearLog();
   await getCatColumns()
     .then(columnResult => {
       catColumn = columnResult;
@@ -332,11 +339,12 @@ async function runCat() {
     }).catch(err => {logLocal(err);})
 }
 
-async function main() {
+async function runTag() {
   let autoTagData: Array<Rule> = [];
   let rewriteAddress: string;
   let tagColumn: number;
   let tagLastRow: number;
+  clearLog();
   await getTagColumns()
     .then(columnResult => {
       tagColumn = columnResult
