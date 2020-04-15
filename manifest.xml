@@ -6,7 +6,7 @@
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="AutoTag for Tiller"/>
   <Description DefaultValue="Automatic Tagging (similar to Tiller's AutoCat)"/>
-  <IconUrl DefaultValue="https://d8k9625rqli4f.cloudfront.net/assets/icon-32.png"/>
+  <IconUrl DefaultValue="https://d8k9625rqli4f.cloudfront.net/assets/icon-80.png"/>
   <HighResolutionIconUrl DefaultValue="https://d8k9625rqli4f.cloudfront.net/assets/icon-80.png"/>
   <SupportUrl DefaultValue="https://sites.google.com/view/jnick/home"/>
   <AppDomains>
