@@ -119,7 +119,7 @@ function makeRules(values: string[][]): Array<Rule> {
   return outputData;
 }
 
-async function getAutoTagData() {
+async function getAutoTagData(): Promise<Rule[]> {
   let rules: Array<Rule>;
   await Excel.run(async context => {
     const sheet = context.workbook.worksheets.getItem("AutoTag").getUsedRange(true);
@@ -197,10 +197,10 @@ async function runRules(
   transactionObject: Map<string, Transaction>,
   uncategorizedOnly: boolean = false
 ): Promise<Array<Transaction>> {
-  let matches: Array<any> = [];
+  let matches: Array<Transaction> = [];
   let transactions = Array.from(transactionObject.values());
   logLocal(`Running with ${rules.length} rules and ${transactions.length} transactions`);
-  logLocal(`Only running uncategorized transactions?: ${uncategorizedOnly}`);
+  // logLocal(`Only running uncategorized transactions?: ${uncategorizedOnly}`);
   for (let transaction of transactions) {
     for (let rule of rules) {
       let ruleMatch =
